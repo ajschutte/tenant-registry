@@ -20,9 +20,9 @@ This README would normally document whatever steps are necessary to get your app
 RabbitMQ:
 
 docker run -d --hostname tms-rabbit --name tms-rabbit -p 15672:15672 -p 5672:5672 
--e RABBITMQ_DEFAULT_VHOST=tmstest1 
--e RABBITMQ_DEFAULT_USER=rabbitmq 
--e RABBITMQ_DEFAULT_PASS=mercurygate 
+-e RABBITMQ_DEFAULT_VHOST={vhost} 
+-e RABBITMQ_DEFAULT_USER={user} 
+-e RABBITMQ_DEFAULT_PASS={password} 
 rabbitmq:3-management
 
 ### Contribution guidelines ###
