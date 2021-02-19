@@ -1,0 +1,18 @@
+server:
+  port: 6086
+  tomcat:
+    accesslog:
+      enabled: false
+management:
+  server:
+    port: 60860
+spring:
+  datasource:
+    url: jdbc:oracle:thin:@localhost:1521:ORCLCDB
+    username: mgowner
+    password: mgowner
+  rabbitmq:
+    addresses: localhost # Comma-separated list of addresses to which the client should connect.
+    username: rabbitmq
+    password: mercurygate
+    virtual-host: tmstest1

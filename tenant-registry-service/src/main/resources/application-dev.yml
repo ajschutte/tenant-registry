@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:oracle:thin:@ORADB01TD:1521/services1td.mercurygate.net
+    username: mgtenregsvc
+    password: mgtenregsvc
+  rabbitmq:
+    addresses: rpcrbt2a.mg.loc # Comma-separated list of addresses to which the client should connect.
+    username: rabbitmq
+    password: mercurygate
+    virtual-host: tmstest1

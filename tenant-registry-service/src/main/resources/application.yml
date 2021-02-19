@@ -1,0 +1,158 @@
+server:
+  port: 8090
+  tomcat:
+    accesslog:
+      enabled: true
+      pattern: "%{org.apache.catalina.AccessLog.RemoteAddr}r %l %u %t '%r' %s %b"
+    basedir: .
+    threads:
+      max: 200
+      min-spare: 10
+  forward-headers-strategy: native
+management:
+  health:
+    diskspace:
+      enabled: true
+    circuitbreakers:
+      enabled: true
+    ratelimiters:
+      enabled: true
+  server:
+    port: 18888
+  endpoints:
+    web:
+      base-path: /manage
+      exposure:
+        include: '*'
+    jmx:
+      domain: tenant-registry-service
+  endpoint:
+    health:
+      show-details: always
+springdoc:
+  swagger-ui:
+    path: /api-docs
+  api-docs:
+    path: /api-specs
+spring:
+  application:
+    name: tenant-registry-service
+  jackson:
+    deserialization:
+      FAIL_ON_UNKNOWN_PROPERTIES: false
+      READ_ENUMS_USING_TO_STRING: true
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+      WRITE_ENUMS_USING_TO_STRING: true
+  datasource:
+    driver-class-name: oracle.jdbc.OracleDriver
+    hikari:
+      autoCommit: false
+      connectionTimeout: 30000
+      maximumPoolSize: 5
+      minimumIdle: 5
+      poolName: TenantRegistryHikariPool
+  jpa:
+    generate-ddl: false
+    hibernate:
+      ddl-auto: validate
+      use-new-id-generator-mappings: true
+    properties:
+      hibernate:
+        generate_statistics: true
+        dialect: org.hibernate.dialect.Oracle10gDialect
+        hql:
+          bulk_id_strategy: org.hibernate.hql.spi.id.inline.InlineIdsInClauseBulkIdStrategy
+    show-sql: false
+  flyway:
+    enabled: true
+    table: FLYWAY_SCHEMA_HISTORY
+  cache:
+    type: hazelcast
+  rabbitmq:
+    port: 5672 # This is the default..
+    listener:
+      simple:
+        acknowledge-mode: auto # This is the default..
+        concurrency: 10
+        max-concurrency: 20
+        prefetch: 5
+        retry:
+          enabled: true
+          max-attempts: 3
+          max-interval: 2000ms
+          multiplier: 2
+          initial-interval: 20000ms
+        default-requeue-rejected: true
+resilience4j.circuitbreaker:
+  configs:
+    default:
+      enabled: false
+      slidingWindowSize: 200
+      permittedNumberOfCallsInHalfOpenState: 10
+      failureRateThreshold: 80
+      eventConsumerBufferSize: 10
+      registerHealthIndicator: true
+      minimumNumberOfCalls: 5
+      automaticTransitionFromOpenToHalfOpenEnabled: true
+      waitDurationInOpenState: 10s
+  instances:
+    provisioningBackend:
+      baseConfig: default
+    queryBackend:
+      baseConfig: default
+    crudBackend:
+      baseConfig: default
+resilience4j.thread-pool-bulkhead:
+  configs:
+    default:
+      maxThreadPoolSize: 10
+      coreThreadPoolSize: 10
+      queueCapacity: 200
+  instances:
+    provisioningBackend:
+      baseConfig: default
+    queryBackend:
+      baseConfig: default
+    crudBackend:
+      baseConfig: default
+resilience4j.ratelimiter:
+  configs:
+    default:
+      registerHealthIndicator: true
+      limitForPeriod: 50
+      limitRefreshPeriod: 500ns
+      timeoutDuration: 5s
+      eventConsumerBufferSize: 100
+      allowHealthIndicatorToFail: true
+  instances:
+    provisioningController:
+      baseConfig: default
+    queryController:
+      baseConfig: default
+    crudController:
+      baseConfig: default
+resilience4j.timelimiter:
+  configs:
+    default:
+      timeoutDuration: 5s
+      cancelRunningFuture: true
+  instances:
+    provisioningBackend:
+      baseConfig: default
+    queryBackend:
+      baseConfig: default
+    crudBackend:
+      baseConfig: default
+mg:
+  services:
+    tenant:
+      rabbit:
+        inboundEventQueueName: tenant-inbound-events-queue
+        inboundEventExchangeName: hid-events-exchange
+        inboundEventDeadLetterExchangeName: dead-tenant-events-exchange
+        inboundEventDeadLetterRoutingKey: dead-tenant-events
+        inboundEventBindingKey: 'tenant.#'
+        inboundEventRoutingKey: 'tenant.id'
+        outboundEventExchangeName: tenant-events-exchange
+        outboundEventQueueName: tenant-outbound-events-queue

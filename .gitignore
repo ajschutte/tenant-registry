@@ -1,0 +1,32 @@
+# Add any directories, files, or patterns you don't want to be tracked by version control
+
+# Build output files belong in Artifactory, not Git
+**/*.class
+**/*.jar
+**/*.war
+**/*.ear
+**/target/
+**/node_modules/
+**/node/
+**/build/
+
+# If you are going to use Gradle to build this project, then uncomment this
+# (gradle-wrapper.jar needs to be in Git, in order to bootstrap gradlew build command)
+##!gradle/wrapper/gradle-wrapper.jar
+
+# Editor and IDE config and backup files belong to the user, not the project
+.classpath
+.project
+.DS_Store
+.settings
+.idea/
+*.iml
+**/*.swp
+**/*.bak
+**/*~
+**/*.del@*
+.vscode
+**/.vscode/
+/logs/
+/tenant-registry-migration/logs/
+/tenant-registry-service/logs/

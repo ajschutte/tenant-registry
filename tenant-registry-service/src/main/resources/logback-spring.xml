@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="true" scan="true">
+
+    <springProperty scope="local" name="log_location" source="logging.path" defaultValue="./logs"/>
+    <property name="env" value="${spring.profiles.active:-NA}" />
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <withJansi>true</withJansi>
+        <encoder>
+            <pattern>%highlight(%-5level) %cyan(%logger{15}) %m - Action="%X{action}", User="%X{username}", TransactionId="%X{transactionId}"%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- trace rolling file appender -->
+    <appender name="TRACE_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <append>true</append>
+        <file>${log_location}/tenant-registry-trace.log</file>
+        <encoder>
+            <pattern>%-5level [%d{ISO8601}] %msg Logger=%logger{15}, Thread="%t", User="%X{username}", Action="%X{action}", TransactionId="%X{transactionId}", Host=${HOSTNAME}%n%rEx</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- Roll daily or whenever the file size reaches 250MB, keep 30 days worth of history but at most 2GB -->
+            <fileNamePattern>${log_location}/tenant-registry-trace.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <maxFileSize>250MB</maxFileSize>
+            <totalSizeCap>2GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <!-- metrics rolling file appender -->
+    <appender name="METRICS_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <append>true</append>
+        <file>${log_location}/tenant-registry-metrics.log</file>
+        <encoder>
+            <pattern>%-5level [%d{ISO8601}] %msg Logger=%logger{15}, Thread="%t", User="%X{username}", Action="%X{action}", TransactionId="%X{transactionId}", Host=${HOSTNAME}%n%rEx</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- Roll daily or whenever the file size reaches 250MB, keep 30 days worth of history but at most 2GB -->
+            <fileNamePattern>${log_location}/tenant-registry-metrics.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <maxFileSize>250MB</maxFileSize>
+            <totalSizeCap>2GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <appender name="ASYNC_TRACE_LOG" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="TRACE_LOG" />
+    </appender>
+
+    <appender name="ASYNC_METRICS_LOG" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="METRICS_LOG" />
+    </appender>
+
+    <logger name="com.mg.log.util.LoggingUtil" additivity="false" level="INFO">
+        <appender-ref ref="ASYNC_METRICS_LOG" />
+    </logger>
+
+    <root level="INFO">
+        <appender-ref ref="ASYNC_TRACE_LOG" />
+        <if condition='property("env").equalsIgnoreCase("local") || property("env").equalsIgnoreCase("NA")'>
+            <then>
+                <appender-ref ref="STDOUT" />
+            </then>
+        </if>
+    </root>
+
+    <logger name="com.mg" level="INFO" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+
+    <!-- Useful Spring packages for debugging -->
+    <logger name="org.springframework.web" level="INFO" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+
+    <!-- Use this logger when you need to temporarily enable targeted logging of timings of code execution -->
+    <logger name="targetedStopWatchLogger" level="INFO" />
+
+    <!-- Request/response logging for Spring MVC for troubleshooting purposes - see https://github.com/isrsal/spring-mvc-logger -->
+    <!-- TODO -->
+    <logger name="com.github.isrsal.logging.LoggingFilter" level="OFF" />
+
+    <logger name="org.hibernate.SQL" additivity="false" level="DEBUG">
+        <appender-ref ref="ASYNC_TRACE_LOG" />
+    </logger>
+
+    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" additivity="false" level="TRACE">
+        <appender-ref ref="ASYNC_TRACE_LOG" />
+    </logger>
+
+    <if condition='property("env").equalsIgnoreCase("local")'>
+        <then>
+            <logger name="com.mg" level="DEBUG" />
+            <!--
+            <logger name="org.hibernate.SQL" level="DEBUG"/>
+            <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE"/>
+            <logger name="org.hibernate.type" level="TRACE"/>
+            -->
+        </then>
+    </if>
+
+</configuration>
